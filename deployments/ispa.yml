@@ -1,19 +1,26 @@
-apiVersion: apps/v1beta1
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: hello
+  name: ispa
+  labels:
+    name: ispa
 spec:
-  replicas: 7
+  replicas: 3
   template:
     metadata:
       labels:
-        app: hello
-        tier: backend
-        track: stable
+        name: ispa
     spec:
       containers:
-        - name: hello
-          image: "gcr.io/google-samples/hello-go-gke:1.0"
+        - name: ispa
+          image: "gcr.io/ispa-176718/github-aleccunningham-ispa:1819e177fa46c3bb1e9858176146f44b0b574a34"
           ports:
-            - name: http
-              containerPort: 80
+            - containerPort: 80
+          volumeMounts:
+            - name: secrets
+              mountPatch: /etc/secrets
+              readOnly: true
+          volumes:
+            - name: secrets
+              secret:
+                secretName: db-passwords

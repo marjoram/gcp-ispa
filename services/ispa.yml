@@ -1,12 +1,13 @@
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: hello
+  name: ispa
+  labels:
+    name: ispa
 spec:
-  selector:
-    app: hello
-    tier: backend
+  type: LoadBalancer
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: http
+  - port: 80
+    targetPort: 8080
+  selector:
+    name: ispa
