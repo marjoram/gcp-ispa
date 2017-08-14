@@ -1,7 +1,6 @@
 # gcp-ispa
 Kubernetes setup for deploying ISPA on Google Cloud Platform
 
-[Official tutorial](https://cloud.google.com/python/django/container-engine)
 
 Create a container cluster:
 
@@ -96,5 +95,4 @@ Delete clusters and data:
 
 ```
 gcloud container clusters delete <ispa>
-gcloud compute disks delete pg-data
 ```
