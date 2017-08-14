@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrations
+  labels:
+    name: migrations
+spec:
+  completions: 1
+  template:
+    metadata:
+      name: migrations
+    spec:
+      containers:
+        - image: us.gcr.io/bionic-bison-166319/ispa:latest
+          name: migrations
+          command: [ "/scripts/run_migrations.sh ]
+      restartPolicy: Never
