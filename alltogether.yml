@@ -28,10 +28,10 @@ spec:
     spec:
       containers:
         - name: ispa
-          image: "gcr.io/ispa-176718/github-aleccunningham-ispa:1819e177fa46c3bb1e9858176146f44b0b574a34"
+          image: "gcr.io/ispa-176718/github-aleccunningham-ispa:latest"
           workingDir: /home/docker/ispa
           ports:
-            - containerPort: 80
+            - containerPort: 8000
           imagePullPolicy: Always
           env:
             - name: DATABASE_USER
@@ -54,16 +54,11 @@ spec:
           - name: cloudsql-oauth-credentials
             mountPath: /secrets/cloudsql
             readOnly: true
-          - name: ssl-certs
-            mountPath: /etc/ssl/certs
           - name: cloudsql
             mountPath: /cloudsql
       volumes:
         - name: cloudsql-oauth-credentials
           secret:
             secretName: cloudsql-oauth-credentials
-        - name: ssl-certs
-          hostPath:
-            path: /etc/ssl/certs
         - name: cloudsql
           emptyDir:
