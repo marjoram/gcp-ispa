@@ -11,7 +11,7 @@ spec:
       name: migrations
     spec:
       containers:
-        - image: us.gcr.io/bionic-bison-166319/ispa:latest
+        - image: us.gcr.io/ispa-176718/ispa:latest
           name: migrations
-          command: [ "/scripts/run_migrations.sh ]
+          command: [ "/run_migrations.sh ]
       restartPolicy: Never
