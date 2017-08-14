@@ -5,7 +5,7 @@ metadata:
   labels:
     name: ispa
 spec:
-  replicas: 3
+  replicas: 1
   template:
     metadata:
       labels:
@@ -14,13 +14,18 @@ spec:
       containers:
         - name: ispa
           image: "gcr.io/ispa-176718/github-aleccunningham-ispa:1819e177fa46c3bb1e9858176146f44b0b574a34"
+          workingDir: /home/docker/ispa
           ports:
             - containerPort: 80
-          volumeMounts:
-            - name: secrets
-              mountPatch: /etc/secrets
-              readOnly: true
-          volumes:
-            - name: secrets
-              secret:
-                secretName: db-passwords
+          imagePullPolicy: Always
+          env:
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: password
