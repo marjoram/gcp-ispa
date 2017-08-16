@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
         - name: ispa
-          image: "gcr.io/ispa-176718/github-aleccunningham-ispa:latest"
+          image: gcr.io/ispa-176718/github-aleccunningham-ispa:latest
           workingDir: /home/docker/ispa
           ports:
             - containerPort: 8000
