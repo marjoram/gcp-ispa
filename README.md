@@ -96,3 +96,9 @@ Delete clusters and data:
 ```
 gcloud container clusters delete <ispa>
 ```
+
+Firewall rules:
+
+```
+gcloud compute firewall-rules create allow-nginx-http --allow tcp:32211 --description "Incoming http allowed."
+gcloud compute firewall-rules create allow-nginx-https --allow tcp:30028 --description "Incoming https allowed."
