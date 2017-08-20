@@ -1,3 +1,0 @@
-FROM marjoram0/relay_ispa:v1
-
-CMD ["npm", "start"]
