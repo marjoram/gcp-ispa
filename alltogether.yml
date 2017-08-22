@@ -4,36 +4,37 @@ kind: Service
 metadata:
   name: ispa
   labels:
-    name: ispa
+    app: ispa
 spec:
   type: LoadBalancer
   ports:
   - port: 80
     targetPort: 8080
   selector:
-    name: ispa
+    app: ispa
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: ispa
   labels:
-    name: ispa
+    app: ispa
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        name: ispa
+        app: ispa
     spec:
       containers:
-        - name: ispa
-          image: gcr.io/ispa-176718/github-aleccunningham-ispa:latest
-          workingDir: /home/docker/ispa
-          ports:
-            - containerPort: 8000
-          imagePullPolicy: Always
-          env:
+      - name: ispa-app
+        # Replace  with your project ID or use `make template`
+        image: gcr.io/ispa-176718/ispa
+        # This setting makes nodes pull the docker image every time before
+        # starting the pod. This is useful when debugging, but should be turned
+        # off in production.
+        imagePullPolicy: Always
+        env:
             - name: DATABASE_USER
               valueFrom:
                 secretKeyRef:
@@ -44,21 +45,30 @@ spec:
                 secretKeyRef:
                   name: cloudsql
                   key: password
+        workingDir:
+          - /home/docker/ispa
+        ports:
+        - containerPort: 8080
 
       - image: b.gcr.io/cloudsql-docker/gce-proxy:1.05
         name: cloudsql-proxy
         command: ["/cloud_sql_proxy", "--dir=/cloudsql",
-                  "-instances=<your-cloudsql-connection-string>=tcp:5432",
+                  "-instances=ispa-176718:us-central1:ispadb=tcp:5432",
                   "-credential_file=/secrets/cloudsql/credentials.json"]
         volumeMounts:
           - name: cloudsql-oauth-credentials
             mountPath: /secrets/cloudsql
             readOnly: true
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs
           - name: cloudsql
             mountPath: /cloudsql
       volumes:
         - name: cloudsql-oauth-credentials
           secret:
             secretName: cloudsql-oauth-credentials
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
         - name: cloudsql
           emptyDir:
