@@ -22,6 +22,8 @@ NUM_NODES=1
 NETWORK=default
 ZONE=us-central1-a
 
+gcloud components update --quiet
+
 # Source the config
 . images.cfg
 if ! gcloud container clusters describe ${CLUSTER_NAME} > /dev/null 2>&1; then
@@ -37,7 +39,7 @@ else
 fi
 
 # Make kubectl use new cluster
-echo "Configuring kubectl to use ${CLUSTER_NAME} cluster..."
+echo "configuring kubectl to use ${CLUSTER_NAME} cluster..."
 gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
 
 echo "creating postgresql database"
