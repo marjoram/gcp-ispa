@@ -12,5 +12,8 @@ delete:
 	kubectl delete -f ispa-app.yml
 	kubectl delete deployment ispa
 	kubectl delete service ispa
+<<<<<<< HEAD
 	gcloud container clusters delete ispa
 	gcloud sql instances patch ispadb --activation-policy NEVER
+=======
+>>>>>>> 3c21d1c08add74afc6da4bf8185eb69dc6dfbad9
