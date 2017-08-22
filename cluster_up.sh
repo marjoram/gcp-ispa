@@ -42,16 +42,12 @@ echo "configuring kubectl to use ${CLUSTER_NAME} cluster..."
 gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
 
 echo "creating postgresql database"
-sql_instance_exists=$(gcloud sql instances list --filter=name=${CLUSTER_NAME} 2>&1 >/dev/null)
-if [ "${sql_instance_exists}" == "Listed 0 items." ]; then
-    gcloud sql instances clone munged-source ${CLUSTER_NAME}
-fi
-gcloud sql instances patch ispadb --activation-policy ALWAYS
+gcloud sql instances patch isbadb --activation-policy ALWAYS
 
 # Create static files bucket via Make, rsync static/ folder
-gsutil rsync -R static/ gs://<your-gcs-bucket>/static
+#gsutil rsync -R static/ gs://<your-gcs-bucket>/static
 
-kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=secrets/cloudsql/credentials.json
+kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=secrets/cloudsql/creds.json
 kubectl create secret generic cloudsql --from-literal=username=postgres --from-literal=password=justtestit
 kubectl apply -f alltogether.yml
 echo "done."

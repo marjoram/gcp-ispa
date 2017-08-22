@@ -10,5 +10,7 @@ create-bucket:
 
 delete:
 	kubectl delete -f alltogether.yml
+	gcloud sql instances patch isbadb --activation-policy NEVER
+
+delete-cluster:
 	gcloud container clusters delete ispa
-	gcloud sql instances patch ispadb --activation-policy NEVER

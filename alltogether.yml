@@ -45,15 +45,13 @@ spec:
                 secretKeyRef:
                   name: cloudsql
                   key: password
-        workingDir:
-          - /home/docker/ispa
         ports:
         - containerPort: 8080
 
       - image: b.gcr.io/cloudsql-docker/gce-proxy:1.05
         name: cloudsql-proxy
         command: ["/cloud_sql_proxy", "--dir=/cloudsql",
-                  "-instances=ispa-176718:us-central1:ispadb=tcp:5432",
+                  "-instances=ispa-176718:us-central1:isbadb=tcp:5432",
                   "-credential_file=/secrets/cloudsql/credentials.json"]
         volumeMounts:
           - name: cloudsql-oauth-credentials
@@ -63,6 +61,8 @@ spec:
             mountPath: /etc/ssl/certs
           - name: cloudsql
             mountPath: /cloudsql
+      # [END proxy_container]
+      # [START volumes]
       volumes:
         - name: cloudsql-oauth-credentials
           secret:
