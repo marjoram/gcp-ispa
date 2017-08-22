@@ -11,14 +11,13 @@
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
-CLUSTER_NAME=${1-imager}
-ZONE=us-central1-f
+CLUSTER_NAME=ispa
+ZONE=us-central1-a
+
+# Delete k8 service and deployment
+kubectl delete -f alltogether.yml
+
+gcloud sql instances patch ispadb --activation-policy NEVER
 
 # Delete cluster
 gcloud container clusters delete --quiet ${CLUSTER_NAME} --zone ${ZONE}
-
-# Delete disk
-gcloud compute disks delete jenkins-home --zone ${ZONE}
-
-# Delete image
-gcloud compute images delete jenkins-home-image

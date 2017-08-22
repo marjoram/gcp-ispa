@@ -17,67 +17,40 @@ function error_exit
 }
 
 # Check for cluster name as first (and only) arg
-CLUSTER_NAME=${1-imager}
-NUM_NODES=3
-MACHINE_TYPE=n1-standard-1
+CLUSTER_NAME=$1
+NUM_NODES=1
 NETWORK=default
 ZONE=us-central1-a
 
 # Source the config
 . images.cfg
 if ! gcloud container clusters describe ${CLUSTER_NAME} > /dev/null 2>&1; then
-  echo "* Creating Google Container Engine cluster \"${CLUSTER_NAME}\"..."
+  echo "creating gcp container engine cluster \"${CLUSTER_NAME}\"..."
   # Create cluster
   gcloud container clusters create ${CLUSTER_NAME} \
     --num-nodes ${NUM_NODES} \
-    --machine-type ${MACHINE_TYPE} \
     --scopes "https://www.googleapis.com/auth/projecthosting,https://www.googleapis.com/auth/devstorage.full_control,https://www.googleapis.com/auth/monitoring,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/cloud-platform" \
     --zone ${ZONE} \
-    --network ${NETWORK} || error_exit "Error creating Google Container Engine cluster"
-  echo "done."
+    --network ${NETWORK} || error_exit "error creating cluster"
 else
-  echo "* Google Container Engine cluster \"${CLUSTER_NAME}\" already exists..."
+  echo "* gce cluster \"${CLUSTER_NAME}\" already exists..."
 fi
 
 # Make kubectl use new cluster
-echo "* Configuring kubectl to use ${CLUSTER_NAME} cluster..."
+echo "Configuring kubectl to use ${CLUSTER_NAME} cluster..."
 gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
+
+echo "creating postgresql database"
+sql_instance_exists=$(gcloud sql instances list --filter=name=${CLUSTER_NAME} 2>&1 >/dev/null)
+if [ "${sql_instance_exists}" == "Listed 0 items." ]; then
+    gcloud sql instances clone munged-source ${CLUSTER_NAME}
+fi
+gcloud sql instances patch ispadb --activation-policy ALWAYS
+
+# Create static files bucket via Make, rsync static/ folder
+gsutil rsync -R static/ gs://<your-gcs-bucket>/static
+
+kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=secrets/cloudsql/credentials.json
+kubectl create secret generic cloudsql --from-literal=username=postgres --from-literal=password=justtestit
+kubectl apply -f alltogether.yml
 echo "done."
-
-echo "Getting Jenkins artifacts"
-if [ ! -d continuous-deployment-on-kubernetes ]; then
-  git clone https://github.com/GoogleCloudPlatform/continuous-deployment-on-kubernetes
-fi
-
-echo "Deploying Jenkins to Google Container Engine..."
-pushd continuous-deployment-on-kubernetes
-
-if ! gcloud compute images describe jenkins-home-image > /dev/null 2>&1; then
-  echo "* Creating Jenkins home image"
-  gcloud compute images create jenkins-home-image --source-uri https://storage.googleapis.com/solutions-public-assets/jenkins-cd/jenkins-home-v2.tar.gz
-else
-  echo "* Jenkins home image already exists"
-fi
-
-if ! gcloud compute disks describe jenkins-home --zone ${ZONE} > /dev/null 2>&1; then
-  echo "* Creating Jenkins home disk"
-  gcloud compute disks create jenkins-home --image jenkins-home-image --zone ${ZONE}
-else
-  echo "* Jenkins home disk already exists"
-fi
-
-PASSWORD=`openssl rand -base64 15`; echo "Your Jenkins password is $PASSWORD"; sed -i.bak s#CHANGE_ME#$PASSWORD# jenkins/k8s/options
-kubectl create ns jenkins
-kubectl create secret generic jenkins --from-file=jenkins/k8s/options --namespace=jenkins
-kubectl apply -f jenkins/k8s/
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/tls.key -out /tmp/tls.crt -subj "/CN=jenkins/O=jenkins"
-kubectl create secret generic tls --from-file=/tmp/tls.crt --from-file=/tmp/tls.key --namespace jenkins
-kubectl apply -f jenkins/k8s/lb/ingress.yaml
-popd
-echo "done."
-
-echo "All resources deployed."
-echo "In a few minutes your loadBalancer will finish provisioning. You can run the following to get its IP address:"
-echo "   kubectl get ingress jenkins --namespace jenkins -o \"jsonpath={.status.loadBalancer.ingress[0].ip}\";echo"
-echo
-echo "Login with user: jenkins and password ${PASSWORD}"
