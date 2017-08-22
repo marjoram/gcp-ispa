@@ -25,7 +25,6 @@ ZONE=us-central1-a
 gcloud components update --quiet
 
 # Source the config
-. images.cfg
 if ! gcloud container clusters describe ${CLUSTER_NAME} > /dev/null 2>&1; then
   echo "creating gcp container engine cluster \"${CLUSTER_NAME}\"..."
   # Create cluster
