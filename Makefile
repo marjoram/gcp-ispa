@@ -33,6 +33,8 @@ update:
 delete:
 	kubectl delete rc ispa
 	kubectl delete service ispa
+	gcloud container clusters delete ispa
+	gcloud sql instances patch ispadb --activation-policy NEVER
 
 keys:
 	# The CName used here is specific to the service specified in nginx-app.yaml.
@@ -50,4 +52,3 @@ push: container
 clean:
 	rm $(KEY)
 	rm $(CERT)
- 
