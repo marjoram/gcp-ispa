@@ -9,8 +9,6 @@ create-bucket:
     gsutil defacl set public-read gs://$(GCLOUD_PROJECT)
 
 delete:
-	kubectl delete -f ispa-app.yml
-	kubectl delete deployment ispa
-	kubectl delete service ispa
+	kubectl delete -f alltogether.yml
 	gcloud container clusters delete ispa
 	gcloud sql instances patch ispadb --activation-policy NEVER
