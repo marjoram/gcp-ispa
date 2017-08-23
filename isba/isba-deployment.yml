@@ -14,7 +14,7 @@ spec:
       containers:
       - name: ispa-app
         # Replace  with your project ID or use `make template`
-        image: gcr.io/coherent-window-177723/isba
+        image: gcr.io/coherent-window-177723/ispa
         # This setting makes nodes pull the docker image every time before
         # starting the pod. This is useful when debugging, but should be turned
         # off in production.
@@ -32,3 +32,26 @@ spec:
                   key: password
         ports:
         - containerPort: 8080
+
+      - image: b.gcr.io/cloudsql-docker/gce-proxy:1.05
+        name: cloudsql-proxy
+        command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                  "-instances=coherent-window-177723:isba-db=tcp:5432",
+                  "-credential_file=/secrets/cloudsql/postgres-creds.json"]
+        volumeMounts:
+          - name: cloudsql-oauth-credentials
+            mountPath: /secrets/cloudsql
+            readOnly: true
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs
+          - name: cloudsql
+            mountPath: /cloudsql
+      volumes:
+        - name: cloudsql-oauth-credentials
+          secret:
+            secretName: cloudsql-oauth-credentials
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
+        - name: cloudsql
+          emptyDir:
