@@ -24,7 +24,7 @@ function error_exit
 CLUSTER_NAME=$1
 NUM_NODES=1
 NETWORK=default
-ZONE=us-central1-a
+ZONE=us-central1-b
 
 gcloud components update --quiet
 
@@ -39,17 +39,17 @@ if [ $? == 1]; then
   gcloud iam service-accounts keys create postgres-creds.json --iam-account marjoram-db@coherent-window-177723.iam.gserviceaccount.com
 fi
 
-gcloud container clusters create ${CLUSTER_NAME} \
-  --num-nodes ${NUM_NODES} \
-  --scopes "https://www.googleapis.com/auth/projecthosting,https://www.googleapis.com/auth/devstorage.full_control,https://www.googleapis.com/auth/monitoring,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/cloud-platform" \
-  --zone ${ZONE} \
-  --network ${NETWORK} || error_exit "error creating cluster"
+#gcloud container clusters create ${CLUSTER_NAME} \
+#  --num-nodes ${NUM_NODES} \
+#  --scopes "https://www.googleapis.com/auth/projecthosting,https://www.googleapis.com/auth/devstorage.full_control,https://www.googleapis.com/auth/monitoring,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/cloud-platform" \
+#  --zone ${ZONE} \
+#  --network ${NETWORK} || error_exit "error creating cluster"
 
 # Make kubectl use new cluster
 gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
 
-kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=secrets/cloudsql/postgres-creds.json
-kubectl create secret generic cloudsql --from-literal=username=dev --from-literal=password=justtestit
+#kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=secrets/cloudsql/postgres-creds.json
+#kubectl create secret generic cloudsql --from-literal=username=dev --from-literal=password=justtestit
 
 kubectl create -f sqlproxy/sqlproxy-deployment.yml
 kubectl create -f sqlproxy/sqlproxy-services.yml
