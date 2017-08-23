@@ -35,15 +35,15 @@ spec:
         # off in production.
         imagePullPolicy: Always
         env:
-            - name: DATABASE_USER
-              valueFrom:
-                secretKeyRef:
-                  name: cloudsql
-                  key: username
-            - name: DATABASE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cloudsql
-                  key: password
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: credentials
+              key: password
         ports:
         - containerPort: 8080
