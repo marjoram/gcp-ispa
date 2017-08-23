@@ -7,7 +7,11 @@
 #
 #    http://www.apache.org/licenses/LICENSE-2.0
 # # Unless required by applicable law or agreed to in writing, software # distributed under the License is distributed on an "AS IS" BASIS, # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# See the License for the specific language governing permissions
+
+#	gsutil mb gs://<bucket>
+# gsutil defacl set public-read gs://<bucket>
+
 set -e
 
 function error_exit
@@ -24,30 +28,43 @@ ZONE=us-central1-a
 
 gcloud components update --quiet
 
-# Source the config
-if ! gcloud container clusters describe ${CLUSTER_NAME} > /dev/null 2>&1; then
-  echo "creating gcp container engine cluster \"${CLUSTER_NAME}\"..."
-  # Create cluster
-  gcloud container clusters create ${CLUSTER_NAME} \
-    --num-nodes ${NUM_NODES} \
-    --scopes "https://www.googleapis.com/auth/projecthosting,https://www.googleapis.com/auth/devstorage.full_control,https://www.googleapis.com/auth/monitoring,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/cloud-platform" \
-    --zone ${ZONE} \
-    --network ${NETWORK} || error_exit "error creating cluster"
-else
-  echo "* gce cluster \"${CLUSTER_NAME}\" already exists..."
+# patch postgres instance to ensure its running
+gcloud sql instances patch isba-db --activation-policy ALWAYS
+
+gcloud iam service-accounts list|grep "Marjoram Digital DB Service Account" > /dev/null
+if [ $? == 1]; then
+  gcloud iam service-accounts create marjoram-db --display-name "Marjoram Digital DB Service Account"
+  gcloud projects add-iam-policy-binding coherent-window-177723 --member serviceAccount:marjoram-db@coherent-window-177723.iam.gserviceaccount.com --role roles/cloudsql.client
+  gcloud projects add-iam-policy-binding coherent-window-177723 --member serviceAccount:marjoram-db@coherent-window-177723.iam.gserviceaccount.com --role roles/storage.objectViewer
+  gcloud iam service-accounts keys create postgres-creds.json --iam-account marjoram-db@coherent-window-177723.iam.gserviceaccount.com
 fi
 
+gcloud container clusters create ${CLUSTER_NAME} \
+  --num-nodes ${NUM_NODES} \
+  --scopes "https://www.googleapis.com/auth/projecthosting,https://www.googleapis.com/auth/devstorage.full_control,https://www.googleapis.com/auth/monitoring,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/cloud-platform" \
+  --zone ${ZONE} \
+  --network ${NETWORK} || error_exit "error creating cluster"
+
 # Make kubectl use new cluster
-echo "configuring kubectl to use ${CLUSTER_NAME} cluster..."
 gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
 
-echo "creating postgresql database"
-gcloud sql instances patch isbadb --activation-policy ALWAYS
+kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=secrets/cloudsql/postgres-creds.json
+kubectl create secret generic cloudsql --from-literal=username=dev --from-literal=password=justtestit
 
-# Create static files bucket via Make, rsync static/ folder
-#gsutil rsync -R static/ gs://<your-gcs-bucket>/static
+kubectl create -f sqlproxy/sqlproxy-deployment.yml
+kubectl create -f sqlproxy/sqlproxy-services.yml
+echo "wait for postgres"
+while :
+  do kubectl get pods -lapp=postgres-proxy -o=custom-columns=STATUS=.status.phase 2> /dev/null|grep Running > /dev/null
+  if [ $? == 0 ]; then
+    break
+  fi
+  sleep 30
+done
 
-kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=secrets/cloudsql/creds.json
-kubectl create secret generic cloudsql --from-literal=username=postgres --from-literal=password=justtestit
-kubectl apply -f alltogether.yml
+# ./manage.py collectstatic
+# gsutil rsync -R static/ gs:<bucket>/static/
+
+kubectl create -f isba/isba-deployment.yml
+kubectl create -f isba/isba-services.yml
 echo "done."
