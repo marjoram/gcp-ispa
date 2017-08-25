@@ -30,6 +30,16 @@ spec:
       - image: gcr.io/rapid-smithy-177819/ispa
         name: ispa-app
         imagePullPolicy: Always
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
         env:
           - name: DATABASE_USER
           - name: DATABASE_PASSWORD

@@ -12,6 +12,16 @@ spec:
       containers:
       - image: redis:latest
         name: redis
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 30
+          periodSeconds: 10
         ports:
         - containerPort: 6379
           protocol: TCP
