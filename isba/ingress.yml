@@ -1,12 +1,10 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: ingress
+  name: basic-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: isba-static-ip
 spec:
-  rules:
-  - http:
-      paths:
-      - path: /*
-        backend:
-          serviceName: django
-          servicePort: 80
+  backend:
+    serviceName: ispa-app
+    servicePort: 80
