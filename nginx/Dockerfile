@@ -2,4 +2,4 @@
 FROM nginx
 
 # Copy custom configuration file from the current directory
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY sites-enabled/isba.conf /etc/nginx/nginx.conf

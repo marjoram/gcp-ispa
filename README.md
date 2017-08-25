@@ -14,47 +14,8 @@ Create database secrets:
 
 ```
 kubectl create secret generic cloudsql --from-literal=username=[PROXY_USERNAME] --from-literal=password=[PASSWORD]
+kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=[PATH_TO_CREDENTIAL_FILE]
 ```
-
-push the docker image to googles cr:
-
-```
-docker build -t gcr.io/<your-project-id>/ispa:latest .
-gcloud docker -- push gcr.io/<your-project-id>/ispa:latest
-```
-
-Create kubernetes resource:
-
-```
-kubectl create -f ispa.yml
-```
-
-Redis cluster:
-
-```
-kubectl apply -f redis/alltogether.yml
-```
-
-Postgres:
-
-Create a Google Cloud SQL Postgres instance:
-
-```
-gcloud sql instances create myinstance --cpu=1 --memory=3840MiB \
-        --database-version=POSTGRES_9_6
-```
-
-Get the connection name:
-
-```
-gcloud sql instances describe [YOUR_INSTANCE_NAME]
-```
-
-Start the sql proxy
-```
-./cloud_sql_proxy -instances="[YOUR_INSTANCE_CONNECTION_NAME]"=tcp:5432
-```
-
 
 Create a new [database](https://cloud.google.com/sql/docs/postgres/create-manage-databases#create) and [user](https://cloud.google.com/sql/docs/postgres/create-manage-users#creating) on the [GP console]()
 
@@ -90,15 +51,3 @@ CDN will be at:
 ```
 http://storage.googleapis.com/<gcs-bucket>/static/
 ```
-
-Delete clusters and data:
-
-```
-gcloud container clusters delete <ispa>
-```
-
-Firewall rules:
-
-```
-gcloud compute firewall-rules create allow-nginx-http --allow tcp:32211 --description "Incoming http allowed."
-gcloud compute firewall-rules create allow-nginx-https --allow tcp:30028 --description "Incoming https allowed."
