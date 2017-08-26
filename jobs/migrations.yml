@@ -11,7 +11,7 @@ spec:
       name: migrations
     spec:
       containers:
-        image: gcr.io/coherent-window-177723/ispa
-          name: migrations
-          command: [ "/run_migrations.sh ]
+      - image: gcr.io/rapid-smithy-177819/ispa
+        name: migrations
+        command: [ "/run_migrations.sh"]
       restartPolicy: Never
