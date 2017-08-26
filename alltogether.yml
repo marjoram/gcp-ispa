@@ -29,6 +29,7 @@ spec:
       containers:
       - image: gcr.io/rapid-smithy-177819/ispa
         name: ispa-app
+        command: ["/gunicorn.sh"]
         imagePullPolicy: Always
         readinessProbe:
           tcpSocket:
