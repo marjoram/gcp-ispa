@@ -5,7 +5,7 @@ metadata:
   labels:
     app: ispa-app
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
@@ -16,18 +16,12 @@ spec:
         name: ispa-app
         imagePullPolicy: Always
         command: ["/gunicorn.sh"]
-        readinessProbe:
-          tcpSocket:
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          tcpSocket:
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
         env:
           - name: DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                name: cloudsql
+                key: username
           - name: DATABASE_PASSWORD
             valueFrom:
               secretKeyRef:
@@ -35,3 +29,26 @@ spec:
                 key: password
         ports:
           - containerPort: 8080
+          
+      - image: b.gcr.io/cloudsql-docker/gce-proxy:1.05
+        name: cloudsql-proxy
+        command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                  "-instances=rapid-smithy-177819:us-central1:isbadbase=tcp:5432",
+                  "-credential_file=/secrets/cloudsql/credentials.json"]
+        volumeMounts:
+          - name: cloudsql-oauth-credentials
+            mountPath: /secrets/cloudsql
+            readOnly: true
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs
+          - name: cloudsql
+            mountPath: /cloudsql
+      volumes:
+        - name: cloudsql-oauth-credentials
+          secret:
+            secretName: cloudsql-oauth-credentials
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
+        - name: cloudsql
+          emptyDir:
