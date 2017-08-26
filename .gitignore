@@ -1,2 +1,3 @@
 configs/config.env
 credentials.json
+secrets.yml

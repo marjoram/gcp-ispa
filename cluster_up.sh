@@ -29,7 +29,7 @@ ZONE=us-central1-b
 gcloud components update --quiet
 
 # patch postgres instance to ensure its running
-gcloud sql instances patch isba-db --activation-policy ALWAYS
+gcloud sql instances patch isbadbase --activation-policy ALWAYS
 
 gcloud iam service-accounts list|grep "ISBA DB Service Account" > /dev/null
 if [ $? == 1]; then
