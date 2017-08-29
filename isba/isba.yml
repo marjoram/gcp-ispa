@@ -27,8 +27,14 @@ spec:
               secretKeyRef:
                 name: cloudsql
                 key: password
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: http_proxy
+            value: $(NODE_NAME):4140
         ports:
-          - containerPort: 8080
+        - containerPort: 8080
         readinessProbe:
           tcpSocket:
             port: 8080

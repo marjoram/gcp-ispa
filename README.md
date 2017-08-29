@@ -51,3 +51,9 @@ CDN will be at:
 ```
 http://storage.googleapis.com/<gcs-bucket>/static/
 ```
+
+kubectl switching namespaces:
+
+```
+kubectl config set-context $(kubectl config current-context) --namespace=
+```
