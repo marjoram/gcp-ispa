@@ -22,6 +22,7 @@ function error_exit
 
 # Check for cluster name as first (and only) arg
 CLUSTER_NAME=$1
+IMAGE=$2
 NUM_NODES=2
 NETWORK=default
 ZONE=us-central1-b
@@ -33,10 +34,10 @@ gcloud sql instances patch isbadbase --activation-policy ALWAYS
 
 gcloud iam service-accounts list|grep "ISBA DB Service Account" > /dev/null
 if [ $? == 1]; then
-  gcloud iam service-accounts create isba-db --display-name "Marjoram Digital DB Service Account"
-  gcloud projects add-iam-policy-binding coherent-window-177723 --member serviceAccount:isba-db@coherent-window-177723.iam.gserviceaccount.com --role roles/cloudsql.client
-  gcloud projects add-iam-policy-binding coherent-window-177723 --member serviceAccount:isba-db@coherent-window-177723.iam.gserviceaccount.com --role roles/storage.objectViewer
-  gcloud iam service-accounts keys create credentials.json --iam-account isba-db@coherent-window-177723.iam.gserviceaccount.com
+  gcloud iam service-accounts create isba-db --display-name "ISBA DB Service Account"
+  gcloud projects add-iam-policy-binding rapid-smithy-177819 --member serviceAccount:isba-db@rapid-smithy-177819.iam.gserviceaccount.com --role roles/cloudsql.client
+  gcloud projects add-iam-policy-binding rapid-smithy-177819 --member serviceAccount:isba-db@rapid-smithy-177819.iam.gserviceaccount.com --role roles/storage.objectViewer
+  gcloud iam service-accounts keys create credentials.json --iam-account isba-db@rapid-smithy-177819.iam.gserviceaccount.com
 fi
 
 gcloud container clusters create ${CLUSTER_NAME} \
@@ -62,11 +63,21 @@ while :
   sleep 30
 done
 
+echo "settings image tag to ${IMAGE}"
+SED_SCRIPT="s/\{\{ image_tag \}\}/${IMAGE}/g"
+
+echo "running migrations"
+pod_name=$(kubectl get pods -o name -l=job-name=migrations)
+kubectl logs -f ${pod_name} migrations
+kubectl get jobs -l=app=migrations -o=custom-columns=FAILED:.status.failed > /dev/null 2>&1
+if [ $? == 0 ]; then
+  echo "migration job failed"
+  kubectl delete -f jobs/migrations.yml
+  exit 2
+fi
+
 # ./manage.py collectstatic
 # gsutil rsync -R static/ gs:<bucket>/static/
-
-kubectl create -f isba/isba.yml
-kubectl create -f isba/isba-service.yml
-
+kubectl create -f isba/isba-service.yml -f isba/isba.yml
 
 echo "done."
