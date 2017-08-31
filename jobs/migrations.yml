@@ -13,5 +13,5 @@ spec:
       containers:
       - image: gcr.io/rapid-smithy-177819/ispa
         name: migrations
-        command: [ "/run_migrations.sh"]
+        command: ["/home/docker/bin/run_migrations.sh"]
       restartPolicy: Never

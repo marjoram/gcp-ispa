@@ -16,12 +16,16 @@ spec:
         ports:
         - containerPort: 443
         - containerPort: 80
+        readinessProbe:
+          tcpSocket:
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
         livenessProbe:
-          httpGet:
-            path: /index.html
+          tcpSocket:
             port: 80
           initialDelaySeconds: 30
-          timeoutSeconds: 1
+          periodSeconds: 10
         volumeMounts:
         - mountPath: /etc/nginx/ssl
           name: secret-volume
