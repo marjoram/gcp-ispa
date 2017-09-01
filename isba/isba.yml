@@ -15,7 +15,7 @@ spec:
       - image: gcr.io/rapid-smithy-177819/ispa
         name: ispa-app
         imagePullPolicy: Always
-        command: ["/gunicorn.sh"]
+        command: ["/home/docker/bin/gunicorn.sh"]
         env:
           - name: DATABASE_USER
             valueFrom:
@@ -27,12 +27,6 @@ spec:
               secretKeyRef:
                 name: cloudsql
                 key: password
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: http_proxy
-            value: $(NODE_NAME):4140
         ports:
         - containerPort: 8080
         readinessProbe:
