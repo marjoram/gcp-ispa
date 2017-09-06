@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redispack-deployment
+spec:
+  replicas: 3 # tells deployment to run 2 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: redispack
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - redispack
+            topologyKey: kubernetes.io/hostname #failure-domain.beta.kubernetes.io/zone
+      containers:
+      - name: redis
+        image: redislabs/redis:kubernetes-4.5.0-18
+        ports:
+        - containerPort: 8443
+          containerPort: 26379
+        resources:
+          requests:
+            memory: "5Gi"
+            cpu: "500m"
+        securityContext:
+          capabilities:
+            add:
+            - SYS_RESOURCE

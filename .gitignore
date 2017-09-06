@@ -2,3 +2,5 @@ configs/config.env
 credentials.json
 secrets.yml
 *.ini
+*-config.yml
+.DS_Store
